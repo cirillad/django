@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Редагування новини{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 600px;">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title mb-4 text-center">Редагувати новину</h2>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="d-flex justify-content-center mt-4">
+          <button type="submit" class="btn btn-primary">Зберегти</button>
+          <a href="{% url 'polls:my_posts' %}" class="btn btn-secondary ms-3">Відміна</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Підключення TinyMCE з CDNJS без API ключа -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
+<script>
+  tinymce.init({
+    selector: 'textarea[name="content"]',
+    menubar: false,
+    plugins: 'lists link image preview',
+    toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image | preview',
+    height: 300
+  });
+</script>
+{% endblock %}
