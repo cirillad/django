@@ -14,4 +14,8 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('posts/', views.post_list, name='post_list'),
     path('posts/create/', views.create_post, name='create_post'),
+    path('my-posts/', views.my_posts, name='my_posts'),
+    path('post/delete/<int:post_id>/', views.delete_post, name='delete_post'),
+    path('post/edit/<int:post_id>/', views.edit_post, name='edit_post'),
+
 ]

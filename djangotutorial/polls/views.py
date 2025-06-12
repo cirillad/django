@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.auth import login as auth_login
 from .forms import CustomUserCreationForm, PostForm
 from django.contrib import messages
@@ -76,14 +76,50 @@ def create_post(request):
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
+
+            if 'image' in request.FILES:
+                optimized_image, new_name = optimize_image(request.FILES['image'], max_size=(800, 800))
+                post.image.save(new_name, optimized_image, save=False)
+
             post.save()
             return redirect('polls:post_list')
     else:
         form = PostForm()
-    # Звертаємось без префікса 'polls/' бо шаблони у кореневій папці templates/
+
     return render(request, 'create_post.html', {'form': form})
 
 def post_list(request):
     posts = Post.objects.select_related('author').order_by('-created_at')
     # Аналогічно тут — без 'polls/'
     return render(request, 'post_list.html', {'posts': posts})
+
+
+@login_required
+def my_posts(request):
+    posts = Post.objects.filter(author=request.user).order_by('-created_at')
+    return render(request, 'my_posts.html', {'posts': posts})
+
+@login_required
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    if post.author != request.user:
+        return HttpResponseForbidden("Ви не маєте права видаляти цю новину.")
+
+    if request.method == 'POST':
+        post.delete()
+        return redirect('polls:my_posts')  # або твоя назва URL для "моїх новин"
+
+@login_required
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('polls:my_posts')
+    else:
+        form = PostForm(instance=post)
+
+    return render(request, 'edit_post.html', {'form': form})
